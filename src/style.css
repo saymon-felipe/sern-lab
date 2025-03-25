@@ -1,0 +1,37 @@
+:root {
+  font-family: 'Courier New', Courier, monospace;
+  color: #33ff33;
+  background-color: #0a0a0a;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --green: #33ff33;
+  --black: #0a0a0a;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.blink {
+  animation: blink 1s infinite alternate steps(7);
+}
+
+@keyframes blink {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
