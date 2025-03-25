@@ -17,7 +17,7 @@
 
     <br><br>
 
-    <p v-if="show">
+    <p :style="'opacity: ' + (showSection ? '1' : '0')">
         COMMANDS AVAILABLE: <br><br>
         1 - CONNECT "TIMETRAVEL_SERVER" <br>
         2 - VIEW "GOVERNMENT_FILES" <br>
@@ -27,7 +27,7 @@
     
     <br><br>
 
-    <span v-if="show">PLEASE ENTER A COMMAND:</span>
+    <span :style="'opacity: ' + (showSection ? '1' : '0')">PLEASE ENTER A COMMAND:</span>
 </template>
 <script>
 import $ from 'jquery';
@@ -39,7 +39,7 @@ export default {
             connectionStatus: 0,
             systemLogStatus: 0,
             userInput: "",
-            show: false
+            showSection: false
         }
     },
     mounted: function () {
@@ -50,7 +50,7 @@ export default {
                 this.$writeText("#system-log").then(() => {
                     this.systemLogStatus = 1;
                     this.$writeText("#user-input").then(() => {
-                        this.show = true;
+                        this.showSection = true;
                         $(".blink").show();
                         $("input").focus();
                     })
