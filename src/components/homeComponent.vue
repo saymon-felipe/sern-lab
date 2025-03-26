@@ -1,6 +1,4 @@
 <template>
-    <h1>SERN - Quantum research</h1>
-
     <span id="welcome">WELCOME TO THE SERN NODE {{ currentNode }}</span>
     
     <br><br>
@@ -13,7 +11,7 @@
 
     <br><br>
 
-    <p style="display: flex; align-items: center;"><span id="user-input">USER INPUT REQUIRED: </span> <input type="text" v-model="userInput" maxlength="1"><p class="blink">█</p></p>
+    <p style="display: flex; align-items: center;"><span id="user-input">USER INPUT REQUIRED: </span> <input type="text" id="" v-model="userInput" maxlength="1"><p class="blink">█</p></p>
 
     <br><br>
 
@@ -61,18 +59,11 @@ export default {
 }
 </script>
 <style scoped>
-span {
-    display: inline-block;
-    opacity: 0;
-}
 .blink {
     display: none;
 }
 
 input {
-    all: unset;
-    caret-color: transparent;
     width: 7px;
-    margin-left: 7px;
 }
 </style>

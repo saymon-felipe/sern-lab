@@ -27,8 +27,19 @@ body {
   overflow: hidden;
 }
 
+input {
+  all: unset;
+  caret-color: transparent;
+  margin-left: 7px;
+}
+
+span {
+  display: inline-block;
+}
+
 .blink {
   animation: blink 1s infinite alternate steps(7);
+  margin: 0;
 }
 
 @keyframes blink {
