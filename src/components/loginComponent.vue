@@ -2,10 +2,10 @@
     <consoleComponent :consoleArray="consoleArray" @executeCommand="fill" />
 </template>
 <script>
-import $ from 'jquery';
 import consoleComponent from "./consoleComponent.vue";
 
 export default {
+    emits: ["go"],
     data() {
         return {
             consoleArray: [
@@ -65,21 +65,7 @@ export default {
         fill: function (event) {
             let index = this.consoleArray.findIndex((item) => { return item.id == event.id });
             this.consoleArray[index].response = event.response;
-        },
-        showPassword: function () {
-            this.requirePassword = true;
-
-            this.$writeText("#user-input-password").then(() => {
-                $(".blink").show();
-                $("input").focus();
-            })
         }
-    },
-    mounted: function () {
-        this.$writeText("#user-input-name").then(() => {
-            $(".blink").show();
-            $("#username").focus();
-        })
     },
     components: {
         consoleComponent

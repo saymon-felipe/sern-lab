@@ -1,34 +1,8 @@
 <template>
-    <span id="welcome">WELCOME TO THE SERN NODE {{ currentNode }}</span>
-    
-    <br><br>
-
-    <span id="connection-status">CONNECTION STATUS: {{ connectionStatus == 1 ? "[ONLINE]" : "[OFFLINE]" }}</span>
-    
-    <br><br>
-
-    <span id="system-log">SYSTEM LOG: {{ systemLogStatus == 1 ? "LOADED SUCCESSFULLY" : "ERROR" }}</span>
-
-    <br><br>
-
-    <p style="display: flex; align-items: center;"><span id="user-input">USER INPUT REQUIRED: </span> <input type="text" id="" v-model="userInput" maxlength="1"><p class="blink">█</p></p>
-
-    <br><br>
-
-    <p :style="'opacity: ' + (showSection ? '1' : '0')">
-        COMMANDS AVAILABLE: <br><br>
-        1 - CONNECT "TIMETRAVEL_SERVER" <br>
-        2 - VIEW "GOVERNMENT_FILES" <br>
-        3 - ACCESS "SECRET_TRANSMISSIONS" <br>
-        4 - DISCONNECT
-    </p>
-    
-    <br><br>
-
-    <span :style="'opacity: ' + (showSection ? '1' : '0')">PLEASE ENTER A COMMAND:</span>
+    <consoleComponent :consoleArray="consoleArray" @executeCommand="fill" />
 </template>
 <script>
-import $ from 'jquery';
+import consoleComponent from "./consoleComponent.vue";
 
 export default {
     data() {
@@ -36,25 +10,76 @@ export default {
             currentNode: 0,
             connectionStatus: 0,
             systemLogStatus: 0,
-            userInput: "",
-            showSection: false
+            userInput: ""
         }
     },
-    mounted: function () {
-        this.$writeText("#welcome").then(() => {
-            this.currentNode = 45;
-            this.$writeText("#connection-status").then(() => {
-                this.connectionStatus = 1;
-                this.$writeText("#system-log").then(() => {
-                    this.systemLogStatus = 1;
-                    this.$writeText("#user-input").then(() => {
-                        this.showSection = true;
-                        $(".blink").show();
-                        $("input").focus();
-                    })
-                })
-            })
-        })
+    computed: {
+        consoleArray: function () {
+            return [
+                {
+                    id: 0,
+                    text: "WELCOME TO THE SERN NODE " + this.currentNode,
+                    input: false,
+                    ready: false,
+                    response: null,
+                    displayedText: ""
+                },
+                {
+                    id: 1,
+                    text: "CONNECTION STATUS: " + (this.connectionStatus == 1 ? "[ONLINE]" : "[OFFLINE]"),
+                    input: false,
+                    ready: false,
+                    response: null,
+                    displayedText: ""
+                },
+                {
+                    id: 2,
+                    text: "SYSTEM LOG: " + (this.systemLogStatus == 1 ? "LOADED SUCCESSFULLY" : "ERROR"),
+                    input: false,
+                    ready: false,
+                    response: null,
+                    displayedText: ""
+                },
+                {
+                    id: 3,
+                    text: 'COMMANDS AVAILABLE: <br><br> 1 - CONNECT "TIMETRAVEL_SERVER" <br> 2 - VIEW "GOVERNMENT_FILES" <br> 3 - ACCESS "SECRET_TRANSMISSIONS" <br> 4 - DISCONNECT <br><br>',
+                    input: false,
+                    ready: false,
+                    response: null,
+                    displayedText: ""
+                },
+                {
+                    id: 4,
+                    text: "USER INPUT REQUIRED: ",
+                    input: true,
+                    ready: false,
+                    response: null,
+                    displayedText: ""
+                }
+            ]
+        }
+    },
+    watch: {
+        'consoleArray': {
+            handler(newValue, oldValue) {
+                this.userInput = newValue[3].response;
+            },
+            deep: true
+        },
+        userInput: function () {
+            if (this.userInput != null) {
+                console.log(this.userInput);
+            }
+        },
+    },
+    components: {
+        consoleComponent
+    },
+    methods: {
+        fill: function (event) {
+            let index = this.consoleArray.findIndex((item) => { return item.id == event.id });
+            this.consoleArray[index].response = event.response;
+        }
     }
 }
 </script>

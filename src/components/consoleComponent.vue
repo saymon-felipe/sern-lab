@@ -1,8 +1,6 @@
 <template>
     <div class="console-line" v-for="(row, index) in consoleArrayData" :key="index">
-        <span>
-            {{ row.displayedText }} {{ row.response }}
-        </span>
+        <span v-html="row.displayedText + ' ' + (row.response != null && row.response != undefined ? row.response : '')"></span>
         <span class="input" v-if="row.input && row.ready">
             <input type="text" :id="'console-input-' + row.id">
             <p class="blink">█</p>
@@ -35,7 +33,7 @@ export default {
             this.writeText(0);
         }
 
-        $(document).on("keydown", (e) => {
+        $(document).off("keydown").on("keydown", (e) => {
             if (this.isAlphanumeric(e)) {
                 $("input").val($("input").val() + e.key);
             } else if (e.key === "Backspace") {
@@ -70,7 +68,7 @@ export default {
                 $(".input").remove();
                 return;
             };
-
+            
             this.writeBuffer = index;
             this.currentRow = this.consoleArrayData[index];
 
@@ -91,6 +89,10 @@ export default {
                     setTimeout(escrever, 40);
                 } else {
                     this.currentRow.ready = true;
+
+                    if (!this.currentRow.input) {
+                        this.writeText(index + 1);
+                    }
                 }
             };
 
