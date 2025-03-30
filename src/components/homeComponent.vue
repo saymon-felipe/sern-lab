@@ -1,76 +1,89 @@
 <template>
-    <consoleComponent :consoleArray="consoleArray" @executeCommand="fill" />
+    <consoleComponent v-if="!loading" :consoleArray="consoleArray" @executeCommand="fill" />
 </template>
 <script>
 import consoleComponent from "./consoleComponent.vue";
 
 export default {
+    emits: ["goToNews"],
     data() {
         return {
             currentNode: 0,
-            connectionStatus: 0,
+            connectionStatus: 1,
             systemLogStatus: 0,
-            userInput: ""
-        }
-    },
-    computed: {
-        consoleArray: function () {
-            return [
-                {
-                    id: 0,
-                    text: "WELCOME TO THE SERN NODE " + this.currentNode,
-                    input: false,
-                    ready: false,
-                    response: null,
-                    displayedText: ""
-                },
-                {
-                    id: 1,
-                    text: "CONNECTION STATUS: " + (this.connectionStatus == 1 ? "[ONLINE]" : "[OFFLINE]"),
-                    input: false,
-                    ready: false,
-                    response: null,
-                    displayedText: ""
-                },
-                {
-                    id: 2,
-                    text: "SYSTEM LOG: " + (this.systemLogStatus == 1 ? "LOADED SUCCESSFULLY" : "ERROR"),
-                    input: false,
-                    ready: false,
-                    response: null,
-                    displayedText: ""
-                },
-                {
-                    id: 3,
-                    text: 'COMMANDS AVAILABLE: <br><br> 1 - CONNECT "TIMETRAVEL_SERVER" <br> 2 - VIEW "GOVERNMENT_FILES" <br> 3 - ACCESS "SECRET_TRANSMISSIONS" <br> 4 - DISCONNECT <br><br>',
-                    input: false,
-                    ready: false,
-                    response: null,
-                    displayedText: ""
-                },
-                {
-                    id: 4,
-                    text: "USER INPUT REQUIRED: ",
-                    input: true,
-                    ready: false,
-                    response: null,
-                    displayedText: ""
-                }
-            ]
+            accessLevel: 0,
+            userInput: "",
+            consoleArray: [],
+            loading: true
         }
     },
     watch: {
         'consoleArray': {
             handler(newValue, oldValue) {
-                this.userInput = newValue[3].response;
+                if (newValue[4].response != null) {
+                    this.userInput = newValue[4].response;
+                }
             },
             deep: true
         },
         userInput: function () {
             if (this.userInput != null) {
-                console.log(this.userInput);
+                if (this.userInput == 1) {
+                    this.$emit("goToNews");
+                }
             }
         },
+    },
+    mounted: function () {
+        this.consoleArray = [
+            {
+                id: 0,
+                text: "BEM VINDO AO TERMINAL SERN " + this.currentNode,
+                input: false,
+                ready: false,
+                response: null,
+                displayedText: "",
+                accessLevel: null
+            },
+            {
+                id: 1,
+                text: "STATUS DE CONEXAO: " + (this.connectionStatus == 1 ? "[ONLINE]" : "[OFFLINE]"),
+                input: false,
+                ready: false,
+                response: null,
+                displayedText: "",
+                accessLevel: null
+            },
+            {
+                id: 2,
+                text: "NIVEL DE ACESSO: " + (this.accessLevel == 0 ? "PUBLICO" : ""),
+                input: false,
+                ready: false,
+                response: null,
+                displayedText: "",
+                accessLevel: null
+            },
+            {
+                id: 3,
+                text: '<br> COMANDOS DISPONIVEIS: <br><br> 1 - VER NOTICIAS <br><br>',
+                input: false,
+                ready: false,
+                response: null,
+                displayedText: "",
+                accessRequired: 0
+            },
+            {
+                id: 4,
+                text: "ENTRADA DO USUARIO NECESSARIA: ",
+                input: true,
+                ready: false,
+                response: null,
+                displayedText: "",
+                accessLevel: null
+            }
+        ]
+
+        this.loading = false;
     },
     components: {
         consoleComponent
@@ -83,12 +96,3 @@ export default {
     }
 }
 </script>
-<style scoped>
-.blink {
-    display: none;
-}
-
-input {
-    width: 7px;
-}
-</style>

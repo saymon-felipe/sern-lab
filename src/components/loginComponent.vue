@@ -1,5 +1,5 @@
 <template>
-    <consoleComponent :consoleArray="consoleArray" @executeCommand="fill" />
+    <consoleComponent v-if="!loading" :consoleArray="consoleArray" @executeCommand="fill" />
 </template>
 <script>
 import consoleComponent from "./consoleComponent.vue";
@@ -28,16 +28,48 @@ export default {
             ],
             requirePassword: false,
             username: null,
-            password: null
+            password: null,
+            authenticated: localStorage.getItem("username") != null && localStorage.getItem("password") != null,
+            loginAction: null,
+            loading: true
         }
+    },
+    mounted: function () {
+        if (this.authenticated) {
+            this.consoleArray.unshift(
+                {
+                    id: 999,
+                    text: "OLA [" + localStorage.getItem("username") + "], DESEJA DESCONECTAR? (S/N)",
+                    input: true,
+                    ready: false,
+                    response: null,
+                    displayedText: ""
+                }
+            )
+        } 
+
+        this.loading = false;
     },
     watch: {
         'consoleArray': {
             handler(newValue, oldValue) {
-                this.username = newValue[0].response;
-                this.password = newValue[1].response;
+                if (this.authenticated) {
+                    this.loginAction = newValue[0].response;
+                } else {
+                    this.username = newValue[0].response;
+                    this.password = newValue[1].response;
+                }
             },
             deep: true
+        },
+        loginAction: function () {
+            if (this.loginAction == "S" || this.loginAction == "s") {
+                localStorage.removeItem("username");
+                localStorage.removeItem("password");
+                location.reload();
+            } else if (this.loginAction == "N" || this.loginAction == "n") {
+                this.$emit("go");
+            }
         },
         username: function () {
             if (this.username != null) {

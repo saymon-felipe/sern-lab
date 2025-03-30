@@ -1,5 +1,6 @@
 <template>
     <div class="console-line" v-for="(row, index) in consoleArrayData" :key="index">
+        <span v-if="row.enumerable && row.selected" class="blink select-arrow">&gt;&nbsp;</span>
         <span v-html="row.displayedText + ' ' + (row.response != null && row.response != undefined ? row.response : '')"></span>
         <span class="input" v-if="row.input && row.ready">
             <input type="text" :id="'console-input-' + row.id">
@@ -9,16 +10,19 @@
 </template>
 <script>
 import $ from 'jquery';
+import writting from "../assets/audio/writting.mp3";
 
 export default {
-    emits: ["executeCommand"],
+    emits: ["executeCommand", "select"],
     props: ["consoleArray"],
     data() {
         return {
             consoleArrayData: JSON.parse(JSON.stringify(this.consoleArray)), // Clonando para evitar mutações diretas na prop
             inputBuffer: true,
             writeBuffer: 0,
-            currentRow: null
+            currentRow: null,
+            audio: null,
+            soundInterval: null
         };
     },
     watch: {
@@ -33,21 +37,46 @@ export default {
             this.writeText(0);
         }
 
-        $(document).off("keydown").on("keydown", (e) => {
+        $(window).off("keydown").on("keydown", (e) => {
             if (this.isAlphanumeric(e)) {
                 $("input").val($("input").val() + e.key);
+                this.writeInput();
             } else if (e.key === "Backspace") {
                 $("input").val($("input").val().slice(0, -1));
+                this.writeInput();
             } else if (e.key === "Enter") {
-                this.currentRow.response = $("input").val();
-                this.$emit("executeCommand", this.currentRow);
-                this.inputBuffer = false;
-            }
+                if (this.currentRow.input) {
+                    if ($("input").val().trim() == "") return;
 
-            this.writeInput();
+                    this.currentRow.response = $("input").val();
+                    this.$emit("executeCommand", this.currentRow);
+                    this.inputBuffer = false;
+                    this.writeInput();
+                } else if (this.currentRow.enumerable) {
+                    this.$emit("select", this.currentRow);
+                }
+            } else if (e.key === "ArrowUp") {
+                this.navigate("backward");
+            } else if (e.key === "ArrowDown") {
+                this.navigate("forward");
+            }
         })
     },
     methods: {
+        navigate: function (type) {
+            let selectedIndex = this.consoleArrayData.findIndex((item) => { return item.selected });
+
+            if (selectedIndex == 0 && type == "backward") {
+                return;
+            }
+
+            if (selectedIndex == this.consoleArrayData.length - 1 && type == "forward") {
+                return;
+            }
+
+            this.consoleArrayData[selectedIndex].selected = false;
+            this.consoleArrayData[type == "forward" ? (selectedIndex + 1) : (selectedIndex - 1)].selected = true;
+        },
         isAlphanumeric: function (event) {
             const key = event.key;
 
@@ -82,13 +111,26 @@ export default {
 
             let i = 0;
 
+            this.audio = new Audio(writting); 
+            this.audio.play();
+
+            this.soundInterval = setInterval(() => {
+                this.audio.currentTime = 0; 
+                this.audio.play(); 
+            }, 3590)    
+
             const escrever = () => {
                 if (i < this.currentRow.text.length) {
                     this.currentRow.displayedText += this.currentRow.text.charAt(i);
                     i++;
-                    setTimeout(escrever, 40);
+                    setTimeout(escrever, 12);
                 } else {
                     this.currentRow.ready = true;
+
+                    clearInterval(this.soundInterval);
+
+                    this.audio.pause();
+                    this.audio = null;
 
                     if (!this.currentRow.input) {
                         this.writeText(index + 1);
@@ -105,6 +147,12 @@ export default {
 .input, .console-line {
     display: flex;
     align-items: center;
+    position: relative;
+}
+
+.select-arrow {
+    position: absolute;
+    left: -18px;
 }
 
 input {
