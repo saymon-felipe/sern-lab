@@ -22,7 +22,7 @@ export default {
             writeBuffer: 0,
             currentRow: null,
             audio: null,
-            soundInterval: null
+            soundTimeout: null
         };
     },
     watch: {
@@ -37,6 +37,8 @@ export default {
             this.writeText(0);
         }
 
+        this.selectedObj = this.consoleArrayData.filter((item) => { return item.selected })[0];
+
         $(window).off("keydown").on("keydown", (e) => {
             if (this.isAlphanumeric(e)) {
                 $("input").val($("input").val() + e.key);
@@ -46,14 +48,14 @@ export default {
                 this.writeInput();
             } else if (e.key === "Enter") {
                 if (this.currentRow.input) {
-                    if ($("input").val().trim() == "") return;
+                    if ($("input").val() == undefined || ($("input").val() != undefined && $("input").val().trim() == "")) return;
 
                     this.currentRow.response = $("input").val();
                     this.$emit("executeCommand", this.currentRow);
                     this.inputBuffer = false;
                     this.writeInput();
-                } else if (this.currentRow.enumerable) {
-                    this.$emit("select", this.currentRow);
+                } else if (this.selectedObj.selected) {
+                    this.$emit("select", this.selectedObj);
                 }
             } else if (e.key === "ArrowUp") {
                 this.navigate("backward");
@@ -75,7 +77,9 @@ export default {
             }
 
             this.consoleArrayData[selectedIndex].selected = false;
-            this.consoleArrayData[type == "forward" ? (selectedIndex + 1) : (selectedIndex - 1)].selected = true;
+            let nextIndex = type == "forward" ? (selectedIndex + 1) : (selectedIndex - 1);
+            this.consoleArrayData[nextIndex].selected = true;
+            this.selectedObj = this.consoleArrayData[nextIndex];
         },
         isAlphanumeric: function (event) {
             const key = event.key;
@@ -83,6 +87,8 @@ export default {
             return /^[a-zA-Z0-9]$/.test(key);
         },
         writeInput: function () {
+            if ($("input").val() == undefined || ($("input").val() != undefined && $("input").val().trim() == "")) return;
+            
             let input = $("input");
             let value = input.val();
 
@@ -91,6 +97,21 @@ export default {
             } else {
                 input.css("width", (value.length * 10) + "px");
             }
+        },
+        initAudioWritting: function () {
+            this.audio = new Audio(writting); 
+            this.audio.play();
+
+            this.soundTimeout = setTimeout(() => {
+                this.onEndedAudioWritting();
+            }, 3590)    
+        },
+        onEndedAudioWritting: function () {
+            this.audio.currentTime = 0; 
+            this.audio.play(); 
+            this.soundTimeout = setTimeout(() => {
+                this.initAudioWritting();
+            }, 3590)    
         },
         writeText(index) {
             if (index >= this.consoleArrayData.length) {
@@ -111,13 +132,7 @@ export default {
 
             let i = 0;
 
-            this.audio = new Audio(writting); 
-            this.audio.play();
-
-            this.soundInterval = setInterval(() => {
-                this.audio.currentTime = 0; 
-                this.audio.play(); 
-            }, 3590)    
+            this.initAudioWritting();
 
             const escrever = () => {
                 if (i < this.currentRow.text.length) {
@@ -127,7 +142,7 @@ export default {
                 } else {
                     this.currentRow.ready = true;
 
-                    clearInterval(this.soundInterval);
+                    clearTimeout(this.soundTimeout);
 
                     this.audio.pause();
                     this.audio = null;

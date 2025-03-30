@@ -82,11 +82,13 @@ export default {
                     accessRequired: 0
                 },
                 {
-                    id: 1,
+                    id: 5,
                     text: "<br><br><br><br><br><br><br>ESC = Retornar",
                     input: false,
                     ready: false,
                     response: null,
+                    enumerable: false,
+                    selected: false,
                     displayedText: ""
                 }
             ]
