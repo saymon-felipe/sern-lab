@@ -3,9 +3,10 @@
     <h1>SERN - Quantum research</h1>
     <div class="terminal">
       <loginComponent v-if="show.login" @go="setRoute('home')" />
-      <homeComponent v-if="show.home" @goToNews="setRoute('news')" />
+      <homeComponent v-if="show.home" @goToNews="setRoute('news')" @blockedAccess="setRoute('block')" />
       <newsComponent v-if="show.news" @selectNotice="setRoute('newsDetails', $event)" @back="setRoute('home')" />
       <noticeDetails v-if="show.newsDetails" :noticeDetails="newsDetails" @back="setRoute('news')" />
+      <blockComponent v-if="show.block" />
     </div>
   </div>
 </template>
@@ -14,6 +15,7 @@ import homeComponent from './components/homeComponent.vue';
 import loginComponent from './components/loginComponent.vue';
 import newsComponent from "./components/newsComponent.vue";
 import noticeDetails from "./components/noticeDetails.vue";
+import blockComponent from "./components/blockComponent.vue";
 
 import audioAmbient from "./assets/audio/terminal-ambient.mp3";
 
@@ -25,7 +27,8 @@ export default {
         login: true,
         home: false,
         news: false,
-        newsDetails: false
+        newsDetails: false,
+        block: false
       },
       newsDetails: null,
       audio: null
@@ -37,6 +40,7 @@ export default {
       this.show.home = false;
       this.show.news = false;
       this.show.newsDetails = false;
+      this.show.block = false;
 
       switch (route) {
         case "login":
@@ -52,6 +56,9 @@ export default {
         case "newsDetails":
           this.newsDetails = event;
           this.show.newsDetails = true;
+          break;
+        case "block":
+          this.show.block = true;
           break;
       }
     },
@@ -76,7 +83,8 @@ export default {
     homeComponent,
     loginComponent,
     newsComponent,
-    noticeDetails
+    noticeDetails,
+    blockComponent
   }
 }
 </script>

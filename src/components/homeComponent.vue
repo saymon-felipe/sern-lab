@@ -1,11 +1,11 @@
 <template>
-    <consoleComponent v-if="!loading" :consoleArray="consoleArray" @executeCommand="fill" />
+    <consoleComponent v-if="!loading" :consoleArray="consoleArray" @executeCommand="fill" :reloadInput="reloadInput" />
 </template>
 <script>
 import consoleComponent from "./consoleComponent.vue";
 
 export default {
-    emits: ["goToNews"],
+    emits: ["goToNews", "blockedAccess"],
     data() {
         return {
             currentNode: 0,
@@ -14,7 +14,10 @@ export default {
             accessLevel: 0,
             userInput: "",
             consoleArray: [],
-            loading: true
+            loading: true,
+            triggered_command: "",
+            attempts: 0,
+            reloadInput: null
         }
     },
     watch: {
@@ -22,14 +25,41 @@ export default {
             handler(newValue, oldValue) {
                 if (newValue[4].response != null) {
                     this.userInput = newValue[4].response;
+
+                    if (newValue[4].triggered_command == "override access") {
+                        this.triggered_command = newValue[4].triggered_command;
+                    }
+
+                    if (newValue[4].attempts) { 
+                        this.attempts = newValue[4].attempts;
+                    }
                 }
             },
             deep: true
         },
         userInput: function () {
             if (this.userInput != null) {
+                if (this.attempts >= 5) {
+                    this.blockAccess();
+                } else {
+                    if (this.triggered_command == "override access") {
+                        this.tentativas++;
+                    }
+                }
+
                 if (this.userInput == 1) {
+                    this.tentativas = 0;
+                    this.consoleArray[4].attempts = 0;
+                    this.reloadInput = false;
                     this.$emit("goToNews");
+                } else {
+                    this.consoleArray[4].triggered_command = "";
+                    this.consoleArray[4].response = "";
+                    this.reloadInput = null;
+                    
+                    this.$nextTick(() => {
+                        this.reloadInput = this.consoleArray[4].id;
+                    })
                 }
             }
         },
@@ -79,7 +109,9 @@ export default {
                 ready: false,
                 response: null,
                 displayedText: "",
-                accessLevel: null
+                accessLevel: null,
+                accepted_commands: ["override access"],
+                attempts: 0
             }
         ]
 
@@ -92,6 +124,11 @@ export default {
         fill: function (event) {
             let index = this.consoleArray.findIndex((item) => { return item.id == event.id });
             this.consoleArray[index].response = event.response;
+            this.consoleArray[index].attempts = event.attempts;
+            this.consoleArray[index].triggered_command = event.triggered_command;
+        },
+        blockAccess: function () {
+            this.$emit("blockedAccess");
         }
     }
 }

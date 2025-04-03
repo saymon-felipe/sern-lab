@@ -1,10 +1,9 @@
 <template>
     <div class="console-line" v-for="(row, index) in consoleArrayData" :key="index">
         <span v-if="row.enumerable && row.selected" class="blink select-arrow">&gt;&nbsp;</span>
-        <span v-html="row.displayedText + ' ' + (row.response != null && row.response != undefined ? row.response : '')"></span>
-        <span class="input" v-if="row.input && row.ready">
-            <input type="text" :id="'console-input-' + row.id">
-            <p class="blink">█</p>
+        <span v-html="row.displayedText + ' ' + (row.response != null && row.response != undefined ? row.response : '')" style="margin-right: 10px;"></span>
+        <span class="input" v-if="row.input && row.ready && inputBuffer">
+            <p class="blink" :style="row.response && row.response.length > 0 ? 'margin-left: -10px' : ''">█</p>
         </span>
     </div>
 </template>
@@ -14,11 +13,11 @@ import writting from "../assets/audio/writting.mp3";
 
 export default {
     emits: ["executeCommand", "select"],
-    props: ["consoleArray"],
+    props: ["consoleArray", "reloadInput"],
     data() {
         return {
             consoleArrayData: JSON.parse(JSON.stringify(this.consoleArray)), // Clonando para evitar mutações diretas na prop
-            inputBuffer: true,
+            inputBuffer: false,
             writeBuffer: 0,
             currentRow: null,
             audio: null,
@@ -29,6 +28,15 @@ export default {
         inputBuffer: function () {
             if (!this.inputBuffer) {
                 this.writeText(this.writeBuffer + 1);
+            }
+        },
+        reloadInput: function () {
+            if (this.reloadInput) {
+                let index = this.consoleArrayData.findIndex(item => item.id == this.reloadInput);
+                this.consoleArrayData[index].response = "";
+                this.$nextTick(() => {
+                    this.inputBuffer = true;
+                })
             }
         }
     },
@@ -41,19 +49,26 @@ export default {
 
         $(window).off("keydown").on("keydown", (e) => {
             if (this.isAlphanumeric(e)) {
-                $("input").val($("input").val() + e.key);
-                this.writeInput();
+                if (!this.currentRow.response) {
+                    this.currentRow.response = "";
+                }
+
+                this.currentRow.response += e.key;
             } else if (e.key === "Backspace") {
-                $("input").val($("input").val().slice(0, -1));
-                this.writeInput();
+                this.currentRow.response = this.currentRow.response.slice(0, -1);
             } else if (e.key === "Enter") {
                 if (this.currentRow.input) {
-                    if ($("input").val() == undefined || ($("input").val() != undefined && $("input").val().trim() == "")) return;
+                    if (this.currentRow.response == undefined || this.currentRow.response != undefined && this.currentRow.response.trim() == "") return;
+                    if (this.currentRow.accepted_commands) {
+                        this.currentRow["attempts"] = this.currentRow["attempts"] ? this.currentRow["attempts"] + 1 : 1;
+                    }
 
-                    this.currentRow.response = $("input").val();
-                    this.$emit("executeCommand", this.currentRow);
+                    if (this.currentRow.accepted_commands && this.currentRow.accepted_commands.some(command => command == this.currentRow.response)) {
+                        this.currentRow["triggered_command"] = this.currentRow.response;
+                    }
+
                     this.inputBuffer = false;
-                    this.writeInput();
+                    this.$emit("executeCommand", this.currentRow);
                 } else if (this.selectedObj.selected) {
                     this.$emit("select", this.selectedObj);
                 }
@@ -86,18 +101,6 @@ export default {
 
             return /^[a-zA-Z0-9]$/.test(key);
         },
-        writeInput: function () {
-            if ($("input").val() == undefined || ($("input").val() != undefined && $("input").val().trim() == "")) return;
-            
-            let input = $("input");
-            let value = input.val();
-
-            if (value.trim() == "") {
-                input.css("width", "10px");
-            } else {
-                input.css("width", (value.length * 10) + "px");
-            }
-        },
         initAudioWritting: function () {
             this.audio = new Audio(writting); 
             this.audio.play();
@@ -115,16 +118,17 @@ export default {
         },
         writeText(index) {
             if (index >= this.consoleArrayData.length) {
-                $(".input").remove();
+                this.inputBuffer = false;
                 return;
             };
             
             this.writeBuffer = index;
+
             this.currentRow = this.consoleArrayData[index];
 
             this.currentRow.displayedText = ""; // Inicializa o texto visível como vazio
 
-            $(".input").remove();
+            this.inputBuffer = false;
 
             if (this.currentRow.input) {
                 this.inputBuffer = true;
